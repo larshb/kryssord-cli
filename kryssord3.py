@@ -7,6 +7,7 @@ from html.parser import HTMLParser
 from xml.dom.minidom import parseString
 from bs4 import BeautifulSoup
 
+from fx import crossword_format
 
 # Logging
 LOGLEVEL = "INFO"
@@ -42,6 +43,11 @@ class FMT:
 
 def bold(str):
     return FMT.BOLD + str + FMT.NONE
+
+
+FANCY = True
+if FANCY:
+    from fx import fullsize_input as input
 
 
 class KryssordOrg:
@@ -84,11 +90,23 @@ class CLI:
         header = f"Fant {FMT.EMPHASIZED}{n}{FMT.NONE} synonym til {FMT.EMPHASIZED}{a}{FMT.NONE}"
         if b:
             header += f" med mønster {FMT.EMPHASIZED}{b}{FMT.NONE}"
+            header += '\n' + crossword_format(b)
         print(header + '\n')
-        for word in words:
-            print(f"  [{len(word):2d}] {word}")
+        try:  # Rich table
+            from rich.console import Console
+            from rich.table import Table
+            table = Table() #(show_header=False)
+            table.add_column("#", justify="right")
+            table.add_column("Synonym")
+            for word in words:
+                table.add_row(str(len(word)), word)
+            Console().print(table)
+        except:  # Pure Python
+            for word in words:
+                print(f"  [{len(word):2d}] {word}")
         if n != len(words):
-            print(f"\n({len(words)}/{n}) {url}")
+            print(f"\n{FMT.ITALIC}({len(words)}/{n}){FMT.NONE}"
+                + f" {FMT.UNDERLINED}{sgr('34')}{url}{FMT.NONE}")
         print(f"{FMT.UNDERLINED}                \n{FMT.NONE}")
 
     def interactive_lookup(self):
@@ -96,6 +114,7 @@ class CLI:
         while not (a := input(bold("Spørreord: ")).replace('.', '?')):
             print(cuu(1), end="")
         b = input(bold("Mønster..: ")).replace('.', '?')
+        print(FMT.ITALIC + sgr('32') + "Laster..." + FMT.NONE)
         words, n, url = self.api.lookup(a, b)
         self.print_results(a, b, words, n, url)
 
@@ -105,7 +124,7 @@ def main(argv):
     print(csi("?1049h"))
     try:
         a = 'nøtt'
-        b = 'k????o*'
+        b = 'k?y?s*d'
         words, n, url = cli.api.lookup(a, b)
         cli.print_results(a, b, words, n, url)
         while True:
@@ -113,6 +132,8 @@ def main(argv):
     except KeyboardInterrupt:
         pass
     except UnboundLocalError:
+        pass
+    except EOFError:
         pass
     finally:
         print(csi("?1049l"))
