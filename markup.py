@@ -91,7 +91,7 @@ class ElementTree:
         html = html.strip()
         html = prune_unrenderable_html(html)
 
-        for data in re.findall(r"((?:<.*?>)|(?:[^<]*))", html, re.M):
+        for data in re.findall(r"((?:<.*?>)|(?:[^<]*))", html, re.M | re.S):
 
             # Empty match?
             if not len(data):
@@ -144,7 +144,7 @@ class ElementTree:
         if element != self.root:
             fail("Incomplete tree")
 
-    def export(self, indent=2, max_level=5):
+    def export(self, indent=2, max_level=-1):
 
         def recurse(level, element):
             lines = []
