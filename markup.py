@@ -3,9 +3,11 @@ from dataclasses import dataclass
 from typing import List
 import re
 
+
 def fail(msg):
     print(msg)
     exit(1)
+
 
 def prune_unrenderable_html(html, remove=True, max_passes=5):
 
@@ -19,7 +21,7 @@ def prune_unrenderable_html(html, remove=True, max_passes=5):
     ]
 
     for _ in range(max_passes):
-        
+
         total = 0
         for pattern, repl in PATTERN_REPL:
 
@@ -36,6 +38,7 @@ def prune_unrenderable_html(html, remove=True, max_passes=5):
     fail(f"Still running substitutions after {max_passes} passes")
     return html
 
+
 @dataclass
 class Element:
 
@@ -44,10 +47,11 @@ class Element:
     children: List
     self_closing: bool
 
+
 def create_element_from_html(html):
 
     self_closing = html.replace(" ", "").endswith("/>")
-    
+
     if capt := re.match(r"<(?P<name>\w+) (?P<attributes>.*)>", html):
         tag = capt.groupdict()
         name = tag["name"]
@@ -92,21 +96,21 @@ class ElementTree:
             # Empty match?
             if not len(data):
                 continue
-            
+
             # Tag?
             if data[0] == "<":
 
                 # Meta-tag?
                 if data[1] == "!":
                     continue
-                
+
                 # Closing?
                 if capt := re.match(r"</(.*)>", data):
                     name = capt.group(1)
                     if (element is None) and parents:
                         element = parents.pop()
                     if element.name != name:
-                        
+
                         # Implicit self closing
                         element = parents.pop()
                         if element.name != name:
@@ -147,10 +151,10 @@ class ElementTree:
             if level == max_level:
                 return lines
             if isinstance(element, str):
-                return [" "*(level*indent) + element]
-            opening = " "*(level*indent) + "<" + element.name
+                return [" " * (level * indent) + element]
+            opening = " " * (level * indent) + "<" + element.name
             for k, v in element.attributes.items():
-                opening += f" {k}=\"{v}\""
+                opening += f' {k}="{v}"'
             if element.self_closing:
                 opening += " /"
             opening += ">"
@@ -158,13 +162,14 @@ class ElementTree:
             if element.children:
                 for child in element.children:
                     lines += recurse(level + 1, child)
-            lines += [" "*(level*indent) + "</" + element.name + ">"]
+            lines += [" " * (level * indent) + "</" + element.name + ">"]
             return lines
 
         lines = []
         for child in self.root.children:
             lines += recurse(0, child)
-        return '\n'.join(lines)
+        return "\n".join(lines)
+
 
 if __name__ == "__main__":
     text = open("test.html").read()
