@@ -1,110 +1,10 @@
 import requests
-from dataclasses import dataclass
-from typing import List
-import re
+
+from markup import Element, ElementTree
 
 def fail(msg):
     print(msg)
     exit(1)
-
-@dataclass
-class Element:
-
-    name: str
-    attributes: dict
-    children: List
-
-class ElementTree:
-
-    def __init__(self, string):
-
-        self.root = Element("root", {}, [])
-        parents = [self.root]
-        element = None
-
-        string = string.strip()
-        for data in re.findall(r"((?:<.*?>)|(?:[^<]*))", string, re.M):
-
-            # Empty match?
-            if not len(data):
-                continue
-            
-            # Tag?
-            if data[0] == "<":
-
-                # Meta-tag?
-                if data[1] == "!":
-                    continue
-                
-                # Closing?
-                if capt := re.match(r"</(.*)>", data):
-                    name = capt.group(1)
-                    #element = parents.pop()
-                    if (element is None) and parents:
-                        element = parents.pop()
-                    if element.name != name:
-                        
-                        # Implicit self closing
-                        element = parents.pop()
-                        if element.name != name:
-                            fail(f"Closing {element.name=}, {name=}")
-
-                    if parents:
-                        element = parents.pop()
-                    else:
-                        element = None
-                    continue
-
-                # Is child?
-                if element is not None:
-                    parents.append(element)
-                
-                # Parse tag
-                if capt := re.match(r"<(?P<name>\w+) (?P<attributes>.*)>", data):
-                    tag = capt.groupdict()
-                    name = tag["name"]
-                    attributes = {}
-                    for kw_attribute in re.findall(r"(\w+)=\"(.*?)\"", tag["attributes"]):
-                        k, v = kw_attribute
-                        attributes[k] = v
-                    element = Element(name, attributes, [])
-                elif capt := re.match(r"<(?P<name>\w+)/*>", data):
-                    tag = capt.groupdict()
-                    name = tag["name"]
-                    attributes = {}
-                    element = Element(name, attributes, [])
-                else:
-                    fail("Unparsed: " + data)
-
-                # Hierarchy
-                parents[-1].children.append(element)
-
-                # Self closing?
-                if data.replace(" ", "").endswith("/>"):
-                    element = None
-
-            # Inner?
-            else:
-                if element is None:
-                    fail("Inner data without element")
-                else:
-                    element.children.append(data)
-
-        if element != self.root:
-            fail("Incomplete tree")
-
-    def print_structure(self, indent=2, max_level=3):
-
-        def recurse(level, element, max_level=max_level):
-            if level == max_level:
-                return
-            print(" "*(level*indent) + "<" + element.name + ">")
-            if element.children:
-                for child in element.children:
-                    recurse(level + 1, child)
-            print(" "*(level*indent) + "</" + element.name + ">")
-        
-        recurse(0, self.root)
 
 full_output = []
 
@@ -202,13 +102,6 @@ def minidom(et: ElementTree):
                 except:
                     pass
 
-                # output = output.replace("&#160;", " ")
-                # output = output.replace("&aelig;", "æ")
-                # output = output.replace("&oslash;", "ø")
-                # output = output.replace("&aring;", "å")
-                # output = output.replace("&Aelig;", "Æ")
-                # output = output.replace("&Oslash;", "Ø")
-                # output = output.replace("&Aring;", "Å")
                 if output.strip() == "":
                     output = ""
                 if output != "":
@@ -357,5 +250,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         word = sys.argv[1]
     else:
-        word = "golde"
+        word = "stoisisme"
+        #word = "golde"
     naob_search(word)
