@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import re
 import html
 from pathlib import Path
@@ -5,8 +7,6 @@ from pathlib import Path
 import requests
 
 from markup import Element, ElementTree
-
-full_output = []
 
 
 class FormattedString:
@@ -28,6 +28,7 @@ class FormattedString:
 
 
 NEWLINE = FormattedString("\n", fmt="\x1b[0m")
+full_output = []
 
 
 def minidom_refresh(max_lines=24):
@@ -41,7 +42,6 @@ def minidom_refresh(max_lines=24):
         except:
             pass
 
-    # print("\x1b[2J\x1b[H")
     raw_list = [str(x) for x in full_output]
     raw = "".join(raw_list)
     orig = raw
@@ -75,7 +75,6 @@ def minidom(et: ElementTree):
                 output = element
                 output = output.replace("\n", " ")
 
-                # output = output.strip()
                 while "  " in output:
                     output = output.replace("  ", " ")
 
@@ -115,27 +114,13 @@ def minidom(et: ElementTree):
 
             # Element
             else:
-                if element.name in ["p", "br"]:
-                    pass  # full_output += [NEWLINE]
-                elif element.name in ["div"] and (
+                if element.name in ["div"] and (
                     "inline-eske" not in element.attributes.get("class", "")
                 ):
                     full_output += [NEWLINE]
-                # elif element.name in ["span"]:
-                #     if str(full_output[-1])[-1] != " ":
-                #         full_output += [" "]
-                else:
-                    pass
-                    # print(f"\n<{element.name}>\n")
-                    # if output != "":
-                    #     exit(0)
 
             while (len(full_output) > 1) and (full_output[-2:] == [NEWLINE, NEWLINE]):
                 full_output = full_output[:-1]
-
-            # if True:
-            #     print("\x1b[2J\x1b[H" + ''.join(str(x) for x in full_output))
-            #     print("...")
 
         # Formatted inline heading
         overskrift = isinstance(element, Element) and (
@@ -249,7 +234,7 @@ def clean_string(string):
         line = line.strip()
         if line:
             lines.append(line)
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 def naob_multi_result(html):
@@ -258,12 +243,18 @@ def naob_multi_result(html):
         treff = capt.group(1)
         print(f"{treff} treff")
         print()
-        
-        for capt in re.finditer(r"<li class=\"page[^>]*?>(.*?)</li>", html, re.M | re.S):
+
+        for capt in re.finditer(
+            r"<li class=\"page[^>]*?>(.*?)</li>", html, re.M | re.S
+        ):
             entry = capt.group(1)
 
             try:
-                capt = re.match(r".*?href=\"([^\"]*?)\">([^<]*?)<.*?<span class=\"ordklasse[^>]*?>([^<]*?)</span>([^<]*?)<.*", entry, re.M | re.S)
+                capt = re.match(
+                    r".*?href=\"([^\"]*?)\">([^<]*?)<.*?<span class=\"ordklasse[^>]*?>([^<]*?)</span>([^<]*?)<.*",
+                    entry,
+                    re.M | re.S,
+                )
                 href, ordbok, ordklasse, beskrivelse = capt.groups()
                 print("\x1b[1m" + ordbok + "\x1b[0m")
                 if href != f"/ordbok/{ordbok}":
@@ -280,8 +271,7 @@ def naob_multi_result(html):
     return False
 
 
-
-def naob_search(word, max_lines=80, load_from_cache=True, save_to_cache=True):
+def naob_search(word, max_lines=24, load_from_cache=True, save_to_cache=True):
 
     url = f"https://naob.no/ordbok/{word}"
     cache_path = Path(__file__).parent / ".cache" / (word + ".html")
@@ -313,7 +303,7 @@ if __name__ == "__main__":
         word = sys.argv[1]
     else:
         # word = "løs"
-        # word = "stoisisme"
+        word = "stoisisme"
         # word = "golde"
-        word = "gold"
+        # word = "gold"
     naob_search(word)
